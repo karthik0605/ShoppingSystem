@@ -39,4 +39,55 @@ public class ItemQueries {
             e.printStackTrace();
         }
     }
+
+    public static void getItemsByCategoryID(int catID) {
+        String query = "SELECT *\n" +
+                "FROM Items i\n" +
+                "WHERE catID = ?;";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, catID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("ID: " + rs.getInt("iID") +
+                            ", Name: " + rs.getString("iname") +
+                            ", Price: " + rs.getBigDecimal("price") +
+                            ", Description: " + rs.getString("description") +
+                            ", Category ID: " + rs.getInt("catID") +
+                            ", Stock: " + rs.getInt("stock"));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void getItemsByCategoryName(String catname) {
+        String query = "SELECT *\n" +
+                "FROM Items i\n" +
+                "JOIN Categories c\n" +
+                "WHERE catname = ?;";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, catname);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("ID: " + rs.getInt("iID") +
+                            ", Name: " + rs.getString("iname") +
+                            ", Price: " + rs.getBigDecimal("price") +
+                            ", Description: " + rs.getString("description") +
+                            ", Category ID: " + rs.getInt("catID") +
+                            ", Stock: " + rs.getInt("stock"));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
