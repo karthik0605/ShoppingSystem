@@ -12,16 +12,22 @@ import javafx.stage.Stage;
 
 // (Optional) Import your DB classes if needed for placeholders:
 import src.DatabaseInitializer;
-import src.CustomerQueries;
-import src.CategoryQueries;
-import src.ItemQueries;
-import src.CartedQueries;
-import src.PurchaseQueries;
+import src.ui.Tuples.CartedItem;
+import src.ui.Tuples.Purchase;
+import src.ui.queries.CustomerQueries;
+import src.ui.queries.ItemQueries;
+import src.ui.queries.CartedQueries;
+import src.ui.Tuples.Item;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import src.ui.queries.PurchaseQueries;
 
 /**
  * A polished, multi-tab Shopping app UI with a Home page,
  * Categories, Items, Cart, Purchases, and Reviews.
- * 
+ *
  * Replace placeholders with real data logic as necessary.
  */
 public class ShoppingAppUI extends Application {
@@ -29,31 +35,38 @@ public class ShoppingAppUI extends Application {
     // Color palette
     private static final String GRADIENT_START = "#1565C0"; // Darker Blue
     private static final String GRADIENT_END   = "#1E88E5"; // Lighter Blue
-    private static final String BACKGROUND_COLOR = "#f2f5fa"; 
+    private static final String BACKGROUND_COLOR = "#f2f5fa";
     private static final String CARD_BACKGROUND  = "#ffffff";
     private static final String TEXT_COLOR       = "#333333";
 
     // Button Colors (Neutral Gray)
     private static final String BUTTON_COLOR       = "#5A5A5A";
-    private static final String BUTTON_HOVER_COLOR = "#707070"; 
+    private static final String BUTTON_HOVER_COLOR = "#707070";
     private static final String BUTTON_TEXT_COLOR  = "#ffffff";
+    private ObservableList<CartedItem> cartItems = FXCollections.observableArrayList();
+
+    private ObservableList<Purchase> purchaseList = FXCollections.observableArrayList();
+    ListView<CartedItem> cartListView = new ListView<>(cartItems);
+
+    ListView<Purchase> purchaseListView = new ListView<>(purchaseList);
+    int userID = -1;
 
     @Override
     public void start(Stage primaryStage) {
-        // Ensure DB tables exist (if your code needs it)
-        DatabaseInitializer.createTables();
+        // Initial Home page setup
+        VBox homePage = buildHomeTab();
 
-        // Main layout with a header, center tab pane, and optional footer
+        // Main layout with a header, center content, and footer
         BorderPane mainLayout = new BorderPane();
         mainLayout.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
 
-        // Header at the top
+        // Header at the top (always visible)
         mainLayout.setTop(buildHeaderBar());
 
-        // Tabs in the center
-        mainLayout.setCenter(buildTabs());
+        // Initially show Home page
+        mainLayout.setCenter(homePage);
 
-        // (Optional) Footer at the bottom
+        // Optional Footer at the bottom
         mainLayout.setBottom(buildFooter());
 
         // Scene
@@ -62,6 +75,8 @@ public class ShoppingAppUI extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
+
 
     /**
      * Creates a gradient header bar with a brand label.
@@ -97,7 +112,7 @@ public class ShoppingAppUI extends Application {
     }
 
     /**
-     * Build the main tab pane. 
+     * Build the main tab pane.
      * We have: Home, Categories, Items, Cart, Purchases, Reviews.
      */
     private TabPane buildTabs() {
@@ -106,33 +121,30 @@ public class ShoppingAppUI extends Application {
         tabPane.setTabMaxHeight(40);
         tabPane.setTabMinWidth(140);
 
-        // 1) Home Tab
-        Tab homeTab = new Tab("Home", buildHomeTab());
-        homeTab.setClosable(false);
-
-        // 2) Categories Tab
+        // 1) Categories Tab
         Tab categoriesTab = new Tab("Categories", buildCategoriesTab());
         categoriesTab.setClosable(false);
 
-        // 3) Items Tab
+        // 2) Items Tab
         Tab itemsTab = new Tab("Items", buildItemsTab());
         itemsTab.setClosable(false);
 
-        // 4) Cart Tab
+        // 3) Cart Tab
         Tab cartTab = new Tab("Cart", buildCartTab());
         cartTab.setClosable(false);
 
-        // 5) Purchases Tab
+        // 4) Purchases Tab
         Tab purchasesTab = new Tab("Purchases", buildPurchasesTab());
         purchasesTab.setClosable(false);
 
-        // 6) Reviews Tab
+        // 5) Reviews Tab
         Tab reviewsTab = new Tab("Reviews", buildReviewsTab());
         reviewsTab.setClosable(false);
 
-        tabPane.getTabs().addAll(homeTab, categoriesTab, itemsTab, cartTab, purchasesTab, reviewsTab);
+        tabPane.getTabs().addAll(categoriesTab, itemsTab, cartTab, purchasesTab, reviewsTab);
         return tabPane;
     }
+
 
     /**
      * (Optional) Footer bar at bottom
@@ -152,83 +164,81 @@ public class ShoppingAppUI extends Application {
 
     //===============================================================
     // 1) HOME TAB
-    //   - Info about the app
-    //   - Customer name/address input (formerly in “Customers” tab)
+    //   - Single input field for User ID
     //===============================================================
-    private ScrollPane buildHomeTab() {
-        // Use a ScrollPane in case content grows
-        ScrollPane scroll = new ScrollPane();
-        scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: transparent;");
-        
+    private VBox buildHomeTab() {
         // Container for everything on the Home tab
         VBox container = new VBox(20);
         container.setPadding(new Insets(20));
-        container.setStyle("-fx-background-color: " + CARD_BACKGROUND + ";" 
-            + "-fx-background-radius: 8;"
-            + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);"
+        container.setStyle("-fx-background-color: " + CARD_BACKGROUND + ";"
+                + "-fx-background-radius: 8;"
+                + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);"
         );
-        
+        container.setAlignment(Pos.CENTER);
+
         // Title
         Label title = new Label("Welcome to ShopMatic!");
         title.setStyle("-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        // Brief info about the app
+        // Info about the app
         Label info = new Label(
-            "ShopMatic is your one-stop solution for all your shopping needs!\n"
-          + "Browse through categories, search items, add them to your cart, and purchase them.\n"
-          + "You can also leave reviews for products after purchasing.\n"
-          + "\nPlease enter your name and address below to get started:"
+                "Please enter your User ID below to get started:"
         );
         info.setStyle("-fx-font-size: 14; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        // A small form for Name & Address
-        VBox formBox = new VBox(10);
-        formBox.setAlignment(Pos.TOP_LEFT);
+        // User ID input field
+        Label idLabel = new Label("User ID:");
+        TextField idField = buildTextField("Enter your User ID...");
 
-        Label nameLabel = new Label("Name:");
-        TextField nameField = buildTextField("Enter customer name...");
+        // Set User ID button
+        Button setUserIDBtn = buildButton("Set User ID");
+        setUserIDBtn.setOnAction(e -> {
+            String userIDStr = idField.getText().trim();
+            if (!userIDStr.isEmpty()) {
+                try {
+                    userID = Integer.parseInt(userIDStr);  // Parse input as integer
+                    System.out.println("User ID set: " + userID);  // Output to console
+                    idField.clear();  // Clear input field after submission
 
-        Label addrLabel = new Label("Address:");
-        TextField addrField = buildTextField("Enter customer address...");
+                    // Replace the center content with the rest of the app's tabs
+                    container.getScene().setRoot(buildMainAppLayout()); // Replaces Home with Tabs
 
-        TextArea outputArea = buildTextArea();
-
-        Button addCustomerBtn = buildButton("Add Customer");
-        addCustomerBtn.setOnAction(e -> {
-            String name = nameField.getText().trim();
-            String address = addrField.getText().trim();
-            if (!name.isEmpty() && !address.isEmpty()) {
-                // Database logic (placeholder)
-                CustomerQueries.insertCustomer(name, address);
-                outputArea.appendText("Customer added: " + name + "\n");
-                nameField.clear();
-                addrField.clear();
+                    cartItems.clear();  // Clear the existing items in the ObservableList
+                    cartItems.addAll(CartedQueries.getCustomerCartItems(userID));
+                } catch (NumberFormatException ex) {
+                    System.out.println("Error: Please enter a valid integer ID.");
+                }
             } else {
-                outputArea.appendText("Error: Name and address cannot be empty.\n");
+                System.out.println("Error: User ID cannot be empty.");
             }
         });
 
-        Button viewCustomersBtn = buildButton("View All Customers");
-        viewCustomersBtn.setOnAction(e -> {
-            // Prints to console in placeholder
-            CustomerQueries.getCustomers();
-            outputArea.appendText("[Customers printed to console.]\n");
-        });
-
         // Lay out form
-        formBox.getChildren().addAll(nameLabel, nameField, addrLabel, addrField, addCustomerBtn, viewCustomersBtn, outputArea);
+        container.getChildren().addAll(title, info, idLabel, idField, setUserIDBtn);
 
-        container.getChildren().addAll(title, info, formBox);
-
-        // Wrap in a top-level VBox with padding
-        VBox wrapper = new VBox(container);
-        wrapper.setPadding(new Insets(20));
-        wrapper.setAlignment(Pos.TOP_LEFT);
-
-        scroll.setContent(wrapper);
-        return scroll;
+        return container;
     }
+
+    private BorderPane buildMainAppLayout() {
+        // Main layout with a header, center tab pane, and footer
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
+
+        // Header at the top (always visible)
+        mainLayout.setTop(buildHeaderBar());
+
+        // Tabs (without the Home tab)
+        mainLayout.setCenter(buildTabs());
+
+        // Optional Footer at the bottom
+        mainLayout.setBottom(buildFooter());
+
+        return mainLayout;
+    }
+
+
+
+
 
     //===============================================================
     // 2) CATEGORIES TAB
@@ -308,6 +318,7 @@ public class ShoppingAppUI extends Application {
         searchBtn.setOnAction(e -> {
             String query = searchField.getText().trim();
             System.out.println("Searching for items with: " + query);
+            buildCartTab();
             // Placeholder for real search logic
         });
         searchBox.setAlignment(Pos.CENTER_LEFT);
@@ -320,11 +331,9 @@ public class ShoppingAppUI extends Application {
         itemsGrid.setPrefColumns(3); // 3 columns
         itemsGrid.setPadding(new Insets(10));
 
-        // Placeholder items
-        String[] sampleItems = { "Shirt", "Laptop", "Coffee Maker", "Plant Pot", "Headphones",
-                                 "Sneakers", "Mixer", "Camera", "Lamp", "Desk Chair" };
-        for (String itemName : sampleItems) {
-            VBox itemCard = createItemCard(itemName);
+        List<Item> items = ItemQueries.getItems();
+        for (Item item : items) {
+            VBox itemCard = createItemCard(item.iname, item.iID);
             itemsGrid.getChildren().add(itemCard);
         }
 
@@ -339,7 +348,7 @@ public class ShoppingAppUI extends Application {
     /**
      * Helper to create a small "item card" with a name, placeholder image, and "Add to Cart" button.
      */
-    private VBox createItemCard(String itemName) {
+    private VBox createItemCard(String itemName, int itemID) {
         VBox card = new VBox(5);
         card.setAlignment(Pos.CENTER);
         card.setStyle("-fx-background-color: #f7f7f7; -fx-border-color: #dddddd; -fx-border-radius: 5; -fx-background-radius: 5;");
@@ -353,8 +362,14 @@ public class ShoppingAppUI extends Application {
         imgPlaceholder.setStyle("-fx-font-size: 24; -fx-text-fill: #999999; -fx-border-color: #cccccc; -fx-padding: 15;");
 
         Button addBtn = buildButton("Add to Cart");
+
+        card.setUserData(itemID);  // Store the ID in the card
+
         addBtn.setOnAction(e -> {
-            // Placeholder logic
+            CartedQueries.insertCartedItem(userID, itemID, 1);
+            cartItems.clear();  // Clear the existing items in the ObservableList
+            cartItems.addAll(CartedQueries.getCustomerCartItems(userID));
+            System.out.println(card.getUserData());
             System.out.println(itemName + " added to cart.");
         });
 
@@ -380,18 +395,37 @@ public class ShoppingAppUI extends Application {
         Label title = new Label("Your Cart");
         title.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        // Placeholder text area or list
-        TextArea cartArea = buildTextArea();
-        cartArea.setPrefHeight(200);
-        cartArea.setText("Items in your cart (placeholder)...\n");
+        ListView<CartedItem> cartListView = new ListView<>(cartItems);
+        cartListView.setPrefHeight(200);
+
+        // Custom cell factory to display item details in the ListView
+        cartListView.setCellFactory(lv -> new ListCell<CartedItem>() {
+            @Override
+            protected void updateItem(CartedItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.name + " - $" + item.price + " x" + item.quantity);
+                }
+            }
+        });
 
         Button purchaseBtn = buildButton("Purchase");
         purchaseBtn.setOnAction(e -> {
+            System.out.println(userID + " " + CartedQueries.getCustomerCartPrice(userID));
+            PurchaseQueries.insertPurchase(userID, CartedQueries.getCustomerCartPrice(userID));
+            PurchaseQueries.makePayment(userID);
+            PurchaseQueries.clearCart(userID);
+            cartItems.clear();  // Clear the existing items in the ObservableList
+            cartItems.addAll(CartedQueries.getCustomerCartItems(userID));
+            purchaseList.clear();
+            purchaseList.addAll(PurchaseQueries.getPurchases(userID));
             System.out.println("Purchasing all items in cart...");
             // Placeholder logic to move items to 'purchased'
         });
 
-        container.getChildren().addAll(title, cartArea, purchaseBtn);
+        container.getChildren().addAll(title, cartListView, purchaseBtn);
 
         VBox wrapper = new VBox(container);
         wrapper.setPadding(new Insets(20));
@@ -400,9 +434,9 @@ public class ShoppingAppUI extends Application {
     }
 
     //===============================================================
-    // 5) PURCHASES TAB
-    //   - Displays items that have already been purchased by past users
-    //===============================================================
+// 5) PURCHASES TAB
+//   - Displays items that have already been purchased by the user
+//===============================================================
     private ScrollPane buildPurchasesTab() {
         ScrollPane scroll = new ScrollPane();
         scroll.setFitToWidth(true);
@@ -410,17 +444,34 @@ public class ShoppingAppUI extends Application {
         VBox container = new VBox(20);
         container.setPadding(new Insets(20));
         container.setStyle("-fx-background-color: " + CARD_BACKGROUND + ";" +
-                           "-fx-background-radius: 8;" +
-                           "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+                "-fx-background-radius: 8;" +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
 
-        Label title = new Label("Purchased Items");
+        Label title = new Label("Your Purchases");
         title.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        TextArea purchasesArea = buildTextArea();
-        purchasesArea.setPrefHeight(300);
-        purchasesArea.setText("This will show all items that have been purchased by any user...\n");
+        // ListView for displaying purchases, using the observable purchaseList
+        ListView<Purchase> purchasesListView = new ListView<>(purchaseList);
+        purchasesListView.setPrefHeight(200);
+        // Custom cell factory to display purchase details in the ListView
+        purchasesListView.setCellFactory(lv -> new ListCell<Purchase>() {
+            @Override
+            protected void updateItem(Purchase item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    // Displaying pid, date, and price for each purchase
+                    setText("Purchase ID: " + item.pid + " | Date: " + item.date + " | Price: $" + item.price);
+                }
+            }
+        });
 
-        container.getChildren().addAll(title, purchasesArea);
+        // Fetch and add the user's purchase history to the observable list
+        purchaseList.clear();  // Clear existing list items
+        purchaseList.addAll(PurchaseQueries.getPurchases(userID));  // Fetch purchases from DB and add to the list
+
+        container.getChildren().addAll(title, purchasesListView);
 
         VBox wrapper = new VBox(container);
         wrapper.setPadding(new Insets(20));
@@ -428,9 +479,10 @@ public class ShoppingAppUI extends Application {
         return scroll;
     }
 
+
     //===============================================================
     // 6) REVIEWS TAB
-    //   - Shows a list of items and lets a user add a review 
+    //   - Shows a list of items and lets a user add a review
     //   - The review is stored (placeholder)
     //===============================================================
     private ScrollPane buildReviewsTab() {

@@ -1,6 +1,12 @@
-package src;
+package src.ui.queries;
+
+import src.DatabaseManager;
+import src.ui.Tuples.Item;
+import src.ui.Tuples.CartedItem;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CartedQueries {
     public static void insertCartedItem(int customerID, int itemID, int quantity) {
@@ -35,49 +41,51 @@ public class CartedQueries {
         }
     }
 
-    public static void getCustomerCartPrice(int customerID) {
+    public static double getCustomerCartPrice(int customerID) {
         String query = "SELECT SUM(i.price * c.quantity) AS total_price FROM Carted c JOIN Items i ON c.iID = i.iID WHERE c.cID = ?;";
-
+        double price = -1;
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, customerID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) { // Use if instead of while (as there's only one result)
-                    System.out.println("Price: " + rs.getDouble("total_price"));
+                    price = rs.getDouble("total_price");
                 } else {
                     System.out.println("No items found in cart.");
+                    price = 0;
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return price;
     }
 
-    public static void getCustomerCartItems(int customerID) {
-        String query = "SELECT iname, price, quantity\n" +
+    public static List<CartedItem> getCustomerCartItems(int customerID) {
+        String query = "SELECT i.iname, i.price, c.quantity\n" +
                 "FROM Carted c\n" +
                 "JOIN Items i ON c.iID = i.iID\n" +
                 "WHERE c.cID = ?;";
-
+        List<CartedItem> cartedItemList = new ArrayList<>();
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-
             stmt.setInt(1, customerID);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) { // Use if instead of while (as there's only one result)
-                    System.out.println("Name: " + rs.getString("iname") +
-                            ", Price: " + rs.getBigDecimal("price") +
-                            ", Quantity: " + rs.getString("quantity"));
-                } else {
-                    System.out.println("No items found in cart.");
+                while (rs.next()) { // Use if instead of while (as there's only one result)
+                    String name = rs.getString("i.iname");
+                    double price = rs.getDouble("i.price");
+                    int quantity = rs.getInt("c.quantity");
+                    CartedItem cartedItem = new CartedItem(name, price, quantity);
+                    cartedItemList.add(cartedItem);
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return cartedItemList;
     }
 }
 
