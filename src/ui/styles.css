@@ -1,0 +1,83 @@
+/* Define some CSS variables for easy color changes */
+:root {
+    --primary-color: #027BCE;
+    --secondary-color: #00A8E8;
+    --background-color: #f5f9fd;
+    --text-color: #333;
+}
+
+/* The main background behind the tab content */
+.tab-pane {
+    -fx-background-color: var(--background-color);
+}
+
+/* The tab header strip at the very top */
+.tab-pane > .tab-header-area {
+    -fx-background-color: var(--primary-color);
+}
+
+/* Each unselected tab label text color */
+.tab-pane > .tab-header-area .tab {
+    -fx-text-base-color: white;
+    -fx-background-color: transparent;
+}
+
+/* The selected/active tab styling */
+.tab-pane > .tab-header-area .tab:selected {
+    -fx-background-color: var(--secondary-color);
+    -fx-text-base-color: white;
+}
+
+/* Title label inside each tab */
+.tab-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: var(--primary-color);
+    -fx-padding: 0 0 10 0; /* bottom margin */
+    -fx-underline: true;
+}
+
+/* Standard button styling */
+.button {
+    -fx-font-size: 14px;
+    -fx-padding: 8 15;
+    -fx-background-color: var(--primary-color);
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.1) , 2, 0, 0, 1 );
+}
+
+.button:hover {
+    -fx-background-color: var(--secondary-color);
+}
+
+/* Labels for form fields */
+.label {
+    -fx-font-weight: bold;
+    -fx-text-fill: var(--text-color);
+}
+
+/* TextField styling */
+.text-field {
+    -fx-padding: 8;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d0d0;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-prompt-text-fill: #999;
+}
+
+/* TextArea styling */
+.text-area {
+    -fx-wrap-text: true;
+    -fx-pref-height: 150px;
+    -fx-border-color: #d0d0d0;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-background-color: #ffffff;
+    -fx-prompt-text-fill: #999;
+    -fx-padding: 8;
+}
