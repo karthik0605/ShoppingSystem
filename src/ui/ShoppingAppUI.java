@@ -261,16 +261,12 @@ public class ShoppingAppUI extends Application {
         Label title = new Label("Shop by Category");
         title.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        // Category buttons container
+        // A flow/hbox of category buttons
         FlowPane catFlow = new FlowPane();
         catFlow.setHgap(15);
         catFlow.setVgap(15);
         catFlow.setPadding(new Insets(10));
         catFlow.setPrefWrapLength(600);
-
-        // Container for displaying items
-        VBox itemsContainer = new VBox(10);
-        itemsContainer.setPadding(new Insets(10));
 
         // Example categories
         String[] categories = { "Women", "Men", "House Appliance", "Plants", "Electronics" };
@@ -281,18 +277,33 @@ public class ShoppingAppUI extends Application {
                 selectedCategory = cat;
                 System.out.println("User selected category: " + cat);
 
-                // Fetch and display items for the selected category
+                // Fetch items for the selected category and display them below the category buttons
                 List<Item> items = ItemQueries.getItemsByCategoryName(cat);
-                itemsContainer.getChildren().clear();
 
+                // A tile/grid of items for the selected category
+                TilePane itemsGrid = new TilePane();
+                itemsGrid.setHgap(20);
+                itemsGrid.setVgap(20);
+                itemsGrid.setPrefColumns(3); // 3 columns
+                itemsGrid.setPadding(new Insets(10));
+
+                // If no items found, display a message
                 if (items.isEmpty()) {
-                    itemsContainer.getChildren().add(new Label("No items found in this category."));
+                    Label noItemsLabel = new Label("No items found in this category.");
+                    noItemsLabel.setStyle("-fx-font-size: 14; -fx-text-fill: gray;");
+                    itemsGrid.getChildren().add(noItemsLabel);
                 } else {
+                    // Display items in the selected category
                     for (Item item : items) {
-                        Label itemLabel = new Label(item.getName() + " - $" + item.getPrice());
-                        itemsContainer.getChildren().add(itemLabel);
+                        VBox itemCard = createItemCard(item.iname, item.iID);
+                        itemsGrid.getChildren().add(itemCard);
                     }
                 }
+
+                // Clear the items grid and re-add the selected category's items
+                VBox itemsContainer = (VBox) container.lookup("#itemsContainer");
+                itemsContainer.getChildren().clear();
+                itemsContainer.getChildren().add(itemsGrid);
             });
             catFlow.getChildren().add(catBtn);
         }
@@ -301,6 +312,11 @@ public class ShoppingAppUI extends Application {
         Label info = new Label("Select a category above to browse products.\n"
                 + "Then you can add them to your cart from the Items tab or category view.");
         info.setStyle("-fx-font-size: 14; -fx-text-fill: " + TEXT_COLOR + ";");
+
+        // Create a container for displaying items below the categories
+        VBox itemsContainer = new VBox(10);
+        itemsContainer.setId("itemsContainer");  // Set an ID to reference this container
+        itemsContainer.setStyle("-fx-background-color: #f5f5f5; -fx-background-radius: 8; -fx-padding: 10;");
 
         container.getChildren().addAll(title, catFlow, info, itemsContainer);
 
