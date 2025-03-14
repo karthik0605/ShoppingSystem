@@ -37,10 +37,19 @@ CREATE TABLE Reviews (
     FOREIGN KEY (iID) REFERENCES Items(iID)
 );
 
+DELIMITER $$
+
+CREATE TRIGGER after_purchase_insert
+    AFTER INSERT ON Purchases
+    FOR EACH ROW
+BEGIN
+    DELETE FROM Carted WHERE cID = NEW.cID;
+    END$$
+
+    DELIMITER ;
 
 -- drop table Carted;
 -- drop table Purchases;
--- drop table Items;
 -- drop table Reviews;
--- drop table Categories;
+-- drop table Items;
 -- drop table Customers;
