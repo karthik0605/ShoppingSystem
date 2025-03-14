@@ -60,28 +60,12 @@ public class PurchaseQueries {
             int rowsChanged = stmt.executeUpdate();
             if (rowsChanged > 0) {
                 System.out.println("Purchase recorded successfully!");
-                clearCart(customerID);
+                //clearCart(customerID);
             }
             else {
                 System.out.println("No items in cart");
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-    public static void clearCart(int customerID) {
-        String query = "DELETE FROM Carted WHERE cID = ?;";
-
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, customerID);
-            int deleteRows = stmt.executeUpdate();
-            if (deleteRows > 0) {
-                System.out.println(deleteRows + " item(s) removed from cart!");
-            } else {
-                System.out.println("Cart was already empty.");
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

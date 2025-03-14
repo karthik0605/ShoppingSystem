@@ -451,7 +451,6 @@ public class ShoppingAppUI extends Application {
             System.out.println(userID + " " + CartedQueries.getCustomerCartPrice(userID));
             PurchaseQueries.insertPurchase(userID, CartedQueries.getCustomerCartPrice(userID));
             PurchaseQueries.makePayment(userID);
-            PurchaseQueries.clearCart(userID);
             cartItems.clear();  // Clear the existing items in the ObservableList
             cartItems.addAll(CartedQueries.getCustomerCartItems(userID));
             purchaseList.clear();
