@@ -47,7 +47,6 @@ public class ShoppingAppUI extends Application {
 
     private ObservableList<Purchase> purchaseList = FXCollections.observableArrayList();
     ListView<CartedItem> cartListView = new ListView<>(cartItems);
-
     ListView<Purchase> purchaseListView = new ListView<>(purchaseList);
     int userID = -1;
 
@@ -304,8 +303,8 @@ public class ShoppingAppUI extends Application {
         VBox container = new VBox(20);
         container.setPadding(new Insets(20));
         container.setStyle("-fx-background-color: " + CARD_BACKGROUND + ";" +
-                           "-fx-background-radius: 8;" +
-                           "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+                "-fx-background-radius: 8;" +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
 
         Label title = new Label("All Items");
         title.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
@@ -315,14 +314,6 @@ public class ShoppingAppUI extends Application {
         Label searchLabel = new Label("Search:");
         TextField searchField = buildTextField("Enter item name...");
         Button searchBtn = buildButton("Go");
-        searchBtn.setOnAction(e -> {
-            String query = searchField.getText().trim();
-            System.out.println("Searching for items with: " + query);
-            buildCartTab();
-            // Placeholder for real search logic
-        });
-        searchBox.setAlignment(Pos.CENTER_LEFT);
-        searchBox.getChildren().addAll(searchLabel, searchField, searchBtn);
 
         // A tile/grid of items
         TilePane itemsGrid = new TilePane();
@@ -331,11 +322,36 @@ public class ShoppingAppUI extends Application {
         itemsGrid.setPrefColumns(3); // 3 columns
         itemsGrid.setPadding(new Insets(10));
 
+        // Initial list of items to populate the grid
         List<Item> items = ItemQueries.getItems();
         for (Item item : items) {
             VBox itemCard = createItemCard(item.iname, item.iID);
             itemsGrid.getChildren().add(itemCard);
         }
+
+        // Search button action
+        searchBtn.setOnAction(e -> {
+            // Clear current items in the grid
+            itemsGrid.getChildren().clear();
+
+            // Perform search query
+            List<Item> itemsByName = ItemQueries.getItemsByNameSubstring(searchField.getText());
+//            System.out.println(searchField.getText());
+            for (Item item : itemsByName) {
+                VBox itemCard = createItemCard(item.iname, item.iID);
+                itemsGrid.getChildren().add(itemCard);
+            }
+
+            // Optional: Print the query being searched for
+            String query = searchField.getText().trim();
+            System.out.println("Searching for items with: " + query);
+
+            // Optionally call buildCartTab here if needed
+            buildCartTab();
+        });
+
+        searchBox.setAlignment(Pos.CENTER_LEFT);
+        searchBox.getChildren().addAll(searchLabel, searchField, searchBtn);
 
         container.getChildren().addAll(title, searchBox, itemsGrid);
 
@@ -344,6 +360,7 @@ public class ShoppingAppUI extends Application {
         scroll.setContent(wrapper);
         return scroll;
     }
+
 
     /**
      * Helper to create a small "item card" with a name, placeholder image, and "Add to Cart" button.

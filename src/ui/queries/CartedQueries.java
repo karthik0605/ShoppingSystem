@@ -10,7 +10,9 @@ import java.util.List;
 
 public class CartedQueries {
     public static void insertCartedItem(int customerID, int itemID, int quantity) {
-        String query = "INSERT INTO Carted(cID, iID, quantity) VALUES (?, ?, ?)";
+        String query = "INSERT INTO Carted (cID, iID, quantity)\n" +
+                "VALUES (?, ?, ?)\n" +
+                "ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity);";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, customerID);  // Set cID
