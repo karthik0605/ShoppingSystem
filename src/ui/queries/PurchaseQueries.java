@@ -70,7 +70,6 @@ public class PurchaseQueries {
             e.printStackTrace();
         }
     }
-
     public static void clearCart(int customerID) {
         String query = "DELETE FROM Carted WHERE cID = ?;";
 

@@ -326,8 +326,6 @@ public class ShoppingAppUI extends Application {
         return scroll;
     }
 
-
-
     //===============================================================
     // 3) ITEMS TAB
     //   - Search bar at the top
