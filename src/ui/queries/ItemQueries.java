@@ -53,30 +53,34 @@ public class ItemQueries {
         return itemList;
     }
 
-    public static void getItemsByID(int iID) {
+    public static Item getItemByID(int itemID) {
         String query = "SELECT *\n" +
                 "FROM Items i\n" +
                 "WHERE iID = ?;";
 
+        Item item = null;  // Initialize item to null
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setInt(1, iID);
+            stmt.setInt(1, itemID);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    System.out.println("ID: " + rs.getInt("iID") +
-                            ", Name: " + rs.getString("iname") +
-                            ", Price: " + rs.getBigDecimal("price") +
-                            ", Description: " + rs.getString("description") +
-                            ", Category: " + rs.getString("catname") +
-                            ", Stock: " + rs.getInt("stock"));
+                if (rs.next()) {  // Only fetch one item, if it exists
+                    int iID = rs.getInt("iID");
+                    String name = rs.getString("iname");
+                    double price = rs.getDouble("price");
+                    String description = rs.getString("description");
+                    String category = rs.getString("catname");
+                    int stock = rs.getInt("stock");
+                    item = new Item(iID, name, price, description, category, stock);  // Set the item object
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return item;  // Return the single item or null if not found
     }
+
 
     public static List<Item> getItemsByNameSubstring(String substring) {
         // Ensure the substring has the '%' for LIKE matching

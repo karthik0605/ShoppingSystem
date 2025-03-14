@@ -3,6 +3,8 @@ package src.ui.queries;
 import src.DatabaseManager;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReviewQueries {
     public static void insertReview(int itemID, String review) {
@@ -21,25 +23,26 @@ public class ReviewQueries {
         }
     }
 
-    public static void getReviewsByItem(int itemID) {
+    public static List<String> getReviewsByItem(int itemID) {
         String query = "SELECT *\n" +
                 "FROM Reviews i\n" +
                 "WHERE iid = ?;";
-
+        List<String> reviews = new ArrayList<>();
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, itemID);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    System.out.println("ID: " + rs.getInt("iID") +
-                            ", Review: " + rs.getString("review"));
+                    String review = rs.getString("review");
+                    reviews.add(review);
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return reviews;
     }
 }
 

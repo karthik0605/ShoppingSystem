@@ -1,6 +1,7 @@
 package src.ui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -20,6 +21,7 @@ import src.ui.Tuples.Purchase;
 import src.ui.queries.CustomerQueries;
 import src.ui.queries.ItemQueries;
 import src.ui.queries.CartedQueries;
+import src.ui.queries.ReviewQueries;
 import src.ui.Tuples.Item;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,10 +52,20 @@ public class ShoppingAppUI extends Application {
     private ObservableList<CartedItem> cartItems = FXCollections.observableArrayList();
 
     private ObservableList<Purchase> purchaseList = FXCollections.observableArrayList();
+
+    private ObservableList<String> reviewList = FXCollections.observableArrayList();
+
     private String selectedCategory = null; // Track selected category
     ListView<CartedItem> cartListView = new ListView<>(cartItems);
     ListView<Purchase> purchaseListView = new ListView<>(purchaseList);
+
+    ListView<String> reviewListView = new ListView<>(reviewList);
     int userID = -1;
+
+    private int selectedItemID = -1; // Global variable to store selected item ID
+    private TabPane tabPane; // Instance variable to store reference to TabPane
+
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -125,7 +137,13 @@ public class ShoppingAppUI extends Application {
         tabPane.setTabMaxHeight(40);
         tabPane.setTabMinWidth(140);
 
-        // 1) Categories Tab
+        // Store the reference to TabPane
+        this.tabPane = tabPane;
+
+        // Create and add tabs to the TabPane as usual...
+
+
+    // 1) Categories Tab
         Tab categoriesTab = new Tab("Categories", buildCategoriesTab());
         categoriesTab.setClosable(false);
 
@@ -371,7 +389,6 @@ public class ShoppingAppUI extends Application {
 
             // Perform search query
             List<Item> itemsByName = ItemQueries.getItemsByNameSubstring(searchField.getText());
-//            System.out.println(searchField.getText());
             for (Item item : itemsByName) {
                 VBox itemCard = createItemCard(item.iname, item.iID);
                 itemsGrid.getChildren().add(itemCard);
@@ -380,9 +397,6 @@ public class ShoppingAppUI extends Application {
             // Optional: Print the query being searched for
             String query = searchField.getText().trim();
             System.out.println("Searching for items with: " + query);
-
-            // Optionally call buildCartTab here if needed
-            buildCartTab();
         });
 
         searchBox.setAlignment(Pos.CENTER_LEFT);
@@ -396,10 +410,6 @@ public class ShoppingAppUI extends Application {
         return scroll;
     }
 
-
-    /**
-     * Helper to create a small "item card" with a name, placeholder image, and "Add to Cart" button.
-     */
     private VBox createItemCard(String itemName, int itemID) {
         VBox card = new VBox(5);
         card.setAlignment(Pos.CENTER);
@@ -424,6 +434,7 @@ public class ShoppingAppUI extends Application {
         imageView.setPreserveRatio(true); // Keep aspect ratio
 
         Button addBtn = buildButton("Add to Cart");
+        Button reviewBtn = buildButton("Go to Reviews");  // New button to go to Reviews
 
         card.setUserData(itemID);  // Store the ID in the card
 
@@ -436,10 +447,36 @@ public class ShoppingAppUI extends Application {
         });
 
         // Add image and other UI components to the card
-        card.getChildren().addAll(nameLabel, imageView, addBtn);
+        card.getChildren().addAll(nameLabel, imageView, addBtn, reviewBtn);
+
+        reviewBtn.setOnAction(e -> {
+            // Set the selected item's ID and switch to the Reviews tab
+            selectedItemID = itemID;
+            System.out.print(selectedItemID);
+            System.out.println("Navigating to Reviews for item ID: " + itemID);
+            // Switch to the Reviews Tab
+            List<String> updatedReviews = ReviewQueries.getReviewsByItem(selectedItemID);
+            reviewList.clear();
+            reviewList.addAll(updatedReviews);
+            switchToReviewsTab();
+        });
 
         return card;
     }
+
+
+    private void switchToReviewsTab() {
+        if (tabPane != null) {
+            // Switch to the Reviews tab, which is the 5th tab (index 4)
+            tabPane.getSelectionModel().select(4); // Reviews tab is at index 4
+
+            // Update the Reviews tab with the selected item information
+            updateReviewsTab();
+        }
+    }
+
+
+
 
 
     //===============================================================
@@ -481,6 +518,7 @@ public class ShoppingAppUI extends Application {
             System.out.println(userID + " " + CartedQueries.getCustomerCartPrice(userID));
             PurchaseQueries.insertPurchase(userID, CartedQueries.getCustomerCartPrice(userID));
             PurchaseQueries.makePayment(userID);
+            System.out.println(userID + " " + CartedQueries.getCustomerCartPrice(userID));
             cartItems.clear();  // Clear the existing items in the ObservableList
             cartItems.addAll(CartedQueries.getCustomerCartItems(userID));
             purchaseList.clear();
@@ -544,6 +582,17 @@ public class ShoppingAppUI extends Application {
     }
 
 
+    private void updateReviewsTab() {
+        // If the selectedItemID is valid, update the item label in the Reviews tab
+        if (selectedItemID != -1) {
+            Item item = ItemQueries.getItemByID(selectedItemID);
+            Label itemLabel = (Label) tabPane.lookup("#itemLabel");  // Get the itemLabel in the Reviews tab
+            itemLabel.setText("Selected Item: " + item.iname);  // Update the label with the selected item name
+        }
+    }
+
+
+
     //===============================================================
     // 6) REVIEWS TAB
     //   - Shows a list of items and lets a user add a review
@@ -556,45 +605,68 @@ public class ShoppingAppUI extends Application {
         VBox container = new VBox(20);
         container.setPadding(new Insets(20));
         container.setStyle("-fx-background-color: " + CARD_BACKGROUND + ";" +
-                           "-fx-background-radius: 8;" +
-                           "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+                "-fx-background-radius: 8;" +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
 
         Label title = new Label("Product Reviews");
         title.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        Label info = new Label("Select an item below to add or view reviews.");
-        info.setStyle("-fx-font-size: 14; -fx-text-fill: " + TEXT_COLOR + ";");
+        // Info about the selected item
+        Label itemLabel = new Label("Selected Item: ");
+        itemLabel.setId("itemLabel");  // Set an ID for easy access
+        if (selectedItemID != -1) {
+            Item item = ItemQueries.getItemByID(selectedItemID);
+            itemLabel.setText("Selected Item: " + item.iname);
+        }
 
-        // Placeholder list of items
-        ComboBox<String> itemSelector = new ComboBox<>();
-        itemSelector.getItems().addAll("Shirt", "Laptop", "Coffee Maker", "Plant Pot", "Headphones");
-        itemSelector.setPromptText("Select an item...");
+        // Fetch reviews for the selected item
+        List<String> reviews = ReviewQueries.getReviewsByItem(selectedItemID);
 
+        // ListView for displaying reviews
+        ListView<String> reviewsListView = new ListView<>();
+        reviewsListView.setPrefHeight(200);
+
+        reviewsListView.setItems(reviewList);
+
+        // Review writing section
+        Label reviewTitle = new Label("Write your review:");
         TextArea reviewArea = buildTextArea();
         reviewArea.setPromptText("Write your review here...");
 
-        Button addReviewBtn = buildButton("Submit Review");
-        addReviewBtn.setOnAction(e -> {
-            String selectedItem = itemSelector.getValue();
+        Button submitReviewButton = buildButton("Submit Review");
+        submitReviewButton.setOnAction(e -> {
             String reviewText = reviewArea.getText().trim();
-            if (selectedItem == null || selectedItem.isEmpty()) {
-                System.out.println("No item selected.");
-            } else if (reviewText.isEmpty()) {
-                System.out.println("No review text entered.");
-            } else {
-                // placeholder for DB logic
-                System.out.println("Review for " + selectedItem + ": " + reviewText);
+            if (!reviewText.isEmpty()) {
+                // Insert the review into the database
+                ReviewQueries.insertReview(selectedItemID, reviewText);
+
+                // Clear the review area after submission
                 reviewArea.clear();
+
+                // Re-fetch the reviews to include the new one
+                List<String> updatedReviews = ReviewQueries.getReviewsByItem(selectedItemID);
+
+                // Use Platform.runLater() to update the ListView on the JavaFX Application Thread
+                Platform.runLater(() -> {
+                    reviewList.clear();
+                    reviewList.addAll(updatedReviews);
+                });
+            } else {
+                System.out.println("Review text cannot be empty.");
             }
         });
 
-        container.getChildren().addAll(title, info, itemSelector, reviewArea, addReviewBtn);
+        container.getChildren().addAll(title, itemLabel, reviewsListView, reviewTitle, reviewArea, submitReviewButton);
 
         VBox wrapper = new VBox(container);
         wrapper.setPadding(new Insets(20));
         scroll.setContent(wrapper);
         return scroll;
     }
+
+
+
+
 
     //===============================================================
     // Helper methods to style common controls
