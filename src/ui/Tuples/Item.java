@@ -17,5 +17,13 @@ public class Item {
         this.catergory = catergory;
         this.stock = stock;
     }
+
+    public String getName() {
+        return iname;
+    }
+
+    public String getPrice() {
+        return String.valueOf(price);
+    }
 }
 

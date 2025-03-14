@@ -43,9 +43,11 @@ public class ShoppingAppUI extends Application {
     private static final String BUTTON_COLOR       = "#5A5A5A";
     private static final String BUTTON_HOVER_COLOR = "#707070";
     private static final String BUTTON_TEXT_COLOR  = "#ffffff";
+
     private ObservableList<CartedItem> cartItems = FXCollections.observableArrayList();
 
     private ObservableList<Purchase> purchaseList = FXCollections.observableArrayList();
+    private String selectedCategory = null; // Track selected category
     ListView<CartedItem> cartListView = new ListView<>(cartItems);
 
     ListView<Purchase> purchaseListView = new ListView<>(purchaseList);
@@ -253,18 +255,22 @@ public class ShoppingAppUI extends Application {
         VBox container = new VBox(20);
         container.setPadding(new Insets(20));
         container.setStyle("-fx-background-color: " + CARD_BACKGROUND + ";" +
-                           "-fx-background-radius: 8;" +
-                           "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+                "-fx-background-radius: 8;" +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
 
         Label title = new Label("Shop by Category");
         title.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        // A flow/hbox of category buttons
+        // Category buttons container
         FlowPane catFlow = new FlowPane();
         catFlow.setHgap(15);
         catFlow.setVgap(15);
         catFlow.setPadding(new Insets(10));
         catFlow.setPrefWrapLength(600);
+
+        // Container for displaying items
+        VBox itemsContainer = new VBox(10);
+        itemsContainer.setPadding(new Insets(10));
 
         // Example categories
         String[] categories = { "Women", "Men", "House Appliance", "Plants", "Electronics" };
@@ -272,24 +278,39 @@ public class ShoppingAppUI extends Application {
             Button catBtn = buildButton(cat);
             catBtn.setMinWidth(140);
             catBtn.setOnAction(e -> {
-                // Placeholder: show items in this category, or switch to Items tab
+                selectedCategory = cat;
                 System.out.println("User selected category: " + cat);
+
+                // Fetch and display items for the selected category
+                List<Item> items = ItemQueries.getItemsByCategoryName(cat);
+                itemsContainer.getChildren().clear();
+
+                if (items.isEmpty()) {
+                    itemsContainer.getChildren().add(new Label("No items found in this category."));
+                } else {
+                    for (Item item : items) {
+                        Label itemLabel = new Label(item.getName() + " - $" + item.getPrice());
+                        itemsContainer.getChildren().add(itemLabel);
+                    }
+                }
             });
             catFlow.getChildren().add(catBtn);
         }
 
         // Info label
         Label info = new Label("Select a category above to browse products.\n"
-                             + "Then you can add them to your cart from the Items tab or category view.");
+                + "Then you can add them to your cart from the Items tab or category view.");
         info.setStyle("-fx-font-size: 14; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        container.getChildren().addAll(title, catFlow, info);
+        container.getChildren().addAll(title, catFlow, info, itemsContainer);
 
         VBox wrapper = new VBox(container);
         wrapper.setPadding(new Insets(20));
         scroll.setContent(wrapper);
         return scroll;
     }
+
+
 
     //===============================================================
     // 3) ITEMS TAB

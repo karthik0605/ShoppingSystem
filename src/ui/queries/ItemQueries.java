@@ -1,5 +1,6 @@
 package src.ui.queries;
 
+import javafx.collections.ObservableList;
 import src.DatabaseManager;
 
 import src.ui.Tuples.Item;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.sql.*;
 
 public class ItemQueries {
+
     public static void insertItem(String name, double price, String description, String category, int stock) {
         String query = "INSERT INTO Items(iname, price, description, catname, stock) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
@@ -78,10 +80,9 @@ public class ItemQueries {
         }
     }
 
-    public static void getItemsByCategoryName(String catname) {
-        String query = "SELECT *\n" +
-                "FROM Items i\n" +
-                "WHERE catname = ?;";
+    public static List<Item> getItemsByCategoryName(String catname) {
+        String query = "SELECT * FROM Items WHERE catname = ?";
+        List<Item> itemList = new ArrayList<>();
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -89,17 +90,23 @@ public class ItemQueries {
             stmt.setString(1, catname);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    System.out.println("ID: " + rs.getInt("iID") +
-                            ", Name: " + rs.getString("iname") +
-                            ", Price: " + rs.getBigDecimal("price") +
-                            ", Description: " + rs.getString("description") +
-                            ", Category: " + rs.getString("catname") +
-                            ", Stock: " + rs.getInt("stock"));
+                    itemList.add(mapResultSetToItem(rs));
                 }
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return itemList;
+    }
+
+    private static Item mapResultSetToItem(ResultSet rs) throws SQLException {
+        return new Item(
+                rs.getInt("iID"),
+                rs.getString("iname"),
+                rs.getDouble("price"),
+                rs.getString("description"),
+                rs.getString("catname"),
+                rs.getInt("stock")
+        );
     }
 }
