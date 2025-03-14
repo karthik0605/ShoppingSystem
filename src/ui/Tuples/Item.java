@@ -8,7 +8,7 @@ public class Item {
     public String catergory;
     public int stock;
 
-    // Constructor
+
     public Item(int iID, String iname, double price, String description, String catergory, int stock) {
         this.iID = iID;
         this.iname = iname;
@@ -16,14 +16,6 @@ public class Item {
         this.description = description;
         this.catergory = catergory;
         this.stock = stock;
-    }
-
-    public String getName() {
-        return iname;
-    }
-
-    public String getPrice() {
-        return String.valueOf(price);
     }
 }
 

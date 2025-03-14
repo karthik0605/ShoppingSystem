@@ -7,57 +7,70 @@ import java.sql.Statement;
 public class DatabaseInitializer {
 
     public static void createTables() {
-        // Each CREATE TABLE statement includes IF NOT EXISTS for safety
         String createCustomers = 
-            "CREATE TABLE IF NOT EXISTS Customers (" +
-            " cID INT PRIMARY KEY AUTO_INCREMENT," +
-            " cname VARCHAR(100) NOT NULL," +
-            " address VARCHAR(100) NOT NULL" +
-            ");";
-
-        String createCategories = 
-            "CREATE TABLE IF NOT EXISTS Categories (" +
-            " catID INT PRIMARY KEY AUTO_INCREMENT," +
-            " catname VARCHAR(100) UNIQUE NOT NULL" +
-            ");";
+            "CREATE TABLE Customers (\n" +
+                    "\tcID INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                    "    cname VARCHAR(100) NOT NULL,\n" +
+                    "    address VARCHAR(100) NOT NULL\n" +
+                    ");";
 
         String createItems = 
-            "CREATE TABLE IF NOT EXISTS Items (" +
-            " iID INT PRIMARY KEY AUTO_INCREMENT," +
-            " iname VARCHAR(100) NOT NULL," +
-            " price DECIMAL(10, 2) NOT NULL," +
-            " description VARCHAR(200) NOT NULL," +
-            " catID INT NOT NULL," +
-            " stock INT NOT NULL," +
-            " FOREIGN KEY (catID) REFERENCES Categories(catID)" +
-            ");";
+            "CREATE TABLE Items (\n" +
+                    "\tiID INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                    "    iname VARCHAR(100) NOT NULL,\n" +
+                    "    price DECIMAL(10, 2) NOT NULL,\n" +
+                    "    description VARCHAR(200) NOT NULL,\n" +
+                    "    catname ENUM('Men', 'Women', 'House Appliance', 'Plants', 'Electronics'),\n" +
+                    "    stock INT NOT NULL\n" +
+                    ");";
 
         String createCarted = 
-            "CREATE TABLE IF NOT EXISTS Carted (" +
-            " cID INT NOT NULL," +
-            " iID INT NOT NULL," +
-            " quantity INTEGER NOT NULL DEFAULT 1," +
-            " PRIMARY KEY (cID, iID)," +
-            " FOREIGN KEY (cID) REFERENCES Customers(cID)," +
-            " FOREIGN KEY (iID) REFERENCES Items(iID)" +
-            ");";
+            "CREATE TABLE Carted (\n" +
+                    "\tcID INT NOT NULL,\n" +
+                    "    iID INT NOT NULL,\n" +
+                    "    quantity INTEGER NOT NULL DEFAULT 1,\n" +
+                    "    PRIMARY KEY (cID, iID),\n" +
+                    "    FOREIGN KEY (cID) REFERENCES Customers(cID),\n" +
+                    "    FOREIGN KEY (iID) REFERENCES Items(iID)\n" +
+                    ");";
 
         String createPurchases = 
-            "CREATE TABLE IF NOT EXISTS Purchases (" +
-            " pID INT PRIMARY KEY AUTO_INCREMENT," +
-            " cID INT NOT NULL," +
-            " date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-            " FOREIGN KEY (cID) REFERENCES Customers(cID)" +
-            ");";
+            "CREATE TABLE Purchases (\n" +
+                    "\tpID INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                    "\tcID INT NOT NULL,\n" +
+                    "    date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n" +
+                    "    price double NOT NULL,\n" +
+                    "    FOREIGN KEY (cID) REFERENCES Customers(cID)\n" +
+                    ");";
+
+        String createReviews =
+                "CREATE TABLE Reviews (\n" +
+                        "\trID INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                        "\tiID INT NOT NULL,\n" +
+                        "    review varchar(200) NOT NULL,\n" +
+                        "    FOREIGN KEY (iID) REFERENCES Items(iID)\n" +
+                        ");";
+
+        String createTrigger =
+                        "\n" +
+                        "CREATE TRIGGER after_purchase_insert\n" +
+                        "    AFTER INSERT ON Purchases\n" +
+                        "    FOR EACH ROW\n" +
+                        "BEGIN\n" +
+                        "    DELETE FROM Carted WHERE cID = NEW.cID;\n" +
+                        "    END    ;";
+                ;
 
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
 
             stmt.executeUpdate(createCustomers);
-            stmt.executeUpdate(createCategories);
             stmt.executeUpdate(createItems);
             stmt.executeUpdate(createCarted);
             stmt.executeUpdate(createPurchases);
+            stmt.executeUpdate(createReviews);
+            stmt.executeUpdate(createTrigger);
+
 
             System.out.println("All tables created (if they did not already exist).");
 

@@ -15,11 +15,11 @@ public class ItemQueries {
         String query = "INSERT INTO Items(iname, price, description, catname, stock) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, name);     // Set iname
-            stmt.setDouble(2, price);    // Set price
-            stmt.setString(3, description);  // Set description
-            stmt.setString(4, category);  // Set catID
-            stmt.setInt(5, stock);       // Set stock
+            stmt.setString(1, name);
+            stmt.setDouble(2, price);
+            stmt.setString(3, description);
+            stmt.setString(4, category);
+            stmt.setInt(5, stock);
 
             int rowsInserted = stmt.executeUpdate();
             if (rowsInserted > 0) {
@@ -58,42 +58,41 @@ public class ItemQueries {
                 "FROM Items i\n" +
                 "WHERE iID = ?;";
 
-        Item item = null;  // Initialize item to null
+        Item item = null;
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, itemID);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {  // Only fetch one item, if it exists
+                if (rs.next()) {
                     int iID = rs.getInt("iID");
                     String name = rs.getString("iname");
                     double price = rs.getDouble("price");
                     String description = rs.getString("description");
                     String category = rs.getString("catname");
                     int stock = rs.getInt("stock");
-                    item = new Item(iID, name, price, description, category, stock);  // Set the item object
+                    item = new Item(iID, name, price, description, category, stock);
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return item;  // Return the single item or null if not found
+        return item;
     }
 
 
     public static List<Item> getItemsByNameSubstring(String substring) {
         // Ensure the substring has the '%' for LIKE matching
-        String formattedSubstring = "%" + substring + "%";  // Format the substring for LIKE query
+        String formattedSubstring = "%" + substring + "%";
 
-        String query = "SELECT * FROM Items WHERE iname LIKE ?;";  // Use '?' placeholder
+        String query = "SELECT * FROM Items WHERE iname LIKE ?;";
 
         List<Item> itemList = new ArrayList<>();
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            // Set the formatted substring (with '%' symbols) in the query
-            stmt.setString(1, formattedSubstring);  // This binds the parameter with the '%' added
+            stmt.setString(1, formattedSubstring);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 // Process the results
