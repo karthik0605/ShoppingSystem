@@ -9,6 +9,9 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.io.File;
 
 // (Optional) Import your DB classes if needed for placeholders:
 import src.DatabaseInitializer;
@@ -238,9 +241,6 @@ public class ShoppingAppUI extends Application {
     }
 
 
-
-
-
     //===============================================================
     // 2) CATEGORIES TAB
     //   - Display category buttons: Women, Men, House Appliance, Plants, Electronics
@@ -409,9 +409,19 @@ public class ShoppingAppUI extends Application {
         Label nameLabel = new Label(itemName);
         nameLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + TEXT_COLOR + ";");
 
-        // Placeholder for an image or icon
-        Label imgPlaceholder = new Label("[IMG]");
-        imgPlaceholder.setStyle("-fx-font-size: 24; -fx-text-fill: #999999; -fx-border-color: #cccccc; -fx-padding: 15;");
+        String imagePath = "images/" + itemName.replaceAll(" ", "_") + ".jpg"; // Assuming the image names match the item names
+        ImageView imageView = new ImageView();
+        File file = new File(imagePath);
+        if (file.exists()) {
+            Image image = new Image(file.toURI().toString());
+            imageView.setImage(image);
+            System.out.println("image found");
+        } else {
+            System.out.println("Image not found at: " + file.getAbsolutePath());
+        }
+        imageView.setFitWidth(100); // Adjust size as necessary
+        imageView.setFitHeight(100);
+        imageView.setPreserveRatio(true); // Keep aspect ratio
 
         Button addBtn = buildButton("Add to Cart");
 
@@ -425,9 +435,12 @@ public class ShoppingAppUI extends Application {
             System.out.println(itemName + " added to cart.");
         });
 
-        card.getChildren().addAll(nameLabel, imgPlaceholder, addBtn);
+        // Add image and other UI components to the card
+        card.getChildren().addAll(nameLabel, imageView, addBtn);
+
         return card;
     }
+
 
     //===============================================================
     // 4) CART TAB

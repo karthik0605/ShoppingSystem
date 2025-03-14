@@ -38,9 +38,9 @@ CREATE TABLE Reviews (
 );
 
 
-drop table Carted;
-drop table Purchases;
-drop table Items;
-drop table Reviews;
-drop table Categories;
-drop table Customers;
+-- drop table Carted;
+-- drop table Purchases;
+-- drop table Items;
+-- drop table Reviews;
+-- drop table Categories;
+-- drop table Customers;
