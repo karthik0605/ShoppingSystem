@@ -513,7 +513,7 @@ public class ShoppingAppUI extends Application {
                     setText(null);
                 } else {
                     // Displaying pid, date, and price for each purchase
-                    setText("Purchase ID: " + item.pid + " | Date: " + item.date + " | Price: $" + item.price);
+                    setText("Date: " + item.date + " | Price: $" + item.price);
                 }
             }
         });

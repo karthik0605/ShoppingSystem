@@ -37,24 +37,6 @@ CREATE TABLE Reviews (
     FOREIGN KEY (iID) REFERENCES Items(iID)
 );
 
-DELIMITER $$
-
-CREATE TRIGGER after_insert_carted
-AFTER INSERT
-ON Carted
-FOR EACH ROW
-BEGIN
-    IF EXISTS (SELECT 1 FROM Carted WHERE cID = NEW.cID AND iID = NEW.iID) THEN
-        UPDATE Carted
-        SET quantity = quantity + 1
-        WHERE cID = NEW.cID AND iID = NEW.iID;
-
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item quantity updated instead of insert';
-    END IF;
-END$$
-
-
-select database();
 
 drop table Carted;
 drop table Purchases;

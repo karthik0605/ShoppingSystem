@@ -34,10 +34,9 @@ public class PurchaseQueries {
             stmt.setInt(1, customerID);
             try (ResultSet rs = stmt.executeQuery()){
                 while (rs.next()) {
-                    int pID = rs.getInt("cID");
                     String date = rs.getString("date");
                     double price = rs.getDouble("price");
-                    Purchase purchase = new Purchase(pID, date, price);
+                    Purchase purchase = new Purchase(date, price);
                     purchaseList.add(purchase);
                 }
             }
